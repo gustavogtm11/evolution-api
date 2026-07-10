@@ -9,7 +9,7 @@
     "resolveJsonModule": true,
     "removeComments": true,
     "outDir": "./dist",
-    "noEmitOnError": true,
+    "noEmitOnError": false,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": false,
