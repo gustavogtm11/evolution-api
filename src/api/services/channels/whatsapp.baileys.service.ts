@@ -71,6 +71,7 @@ import { BadRequestException, InternalServerErrorException, NotFoundException } 
 import { dbserver } from '../../../libs/db.connect';
 import { makeProxyAgent } from '../../../utils/makeProxyAgent';
 import { useMultiFileAuthStateDb } from '../../../utils/use-multi-file-auth-state-db';
+import { useMultiFileAuthStateFirebase } from '../../../utils/use-multi-file-auth-state-firebase';
 import { AuthStateProvider } from '../../../utils/use-multi-file-auth-state-provider-files';
 import { useMultiFileAuthStateRedisDb } from '../../../utils/use-multi-file-auth-state-redis-db';
 import {
@@ -498,6 +499,11 @@ export class BaileysStartupService extends ChannelStartupService {
     this.logger.verbose('Defining auth state');
     const db = this.configService.get<Database>('DATABASE');
     const cache = this.configService.get<CacheConf>('CACHE');
+
+    if (process.env.AUTH_STATE_STORAGE?.toLowerCase() === 'firebase') {
+      this.logger.info('Firebase Firestore enabled for WhatsApp auth state');
+      return await useMultiFileAuthStateFirebase(this.instance.name);
+    }
 
     const provider = this.configService.get<ProviderSession>('PROVIDER');
 
