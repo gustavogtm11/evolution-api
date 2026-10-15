@@ -26,7 +26,6 @@ import makeWASocket, {
   MessageUpsertType,
   MiscMessageGenerationOptions,
   ParticipantAction,
-  PHONENUMBER_MCC,
   prepareWAMessageMedia,
   proto,
   useMultiFileAuthState,
@@ -132,6 +131,8 @@ import { waMonitor } from '../../server.module';
 import { Events, MessageSubtype, TypeMediaMessage, wa } from '../../types/wa.types';
 import { CacheService } from './../cache.service';
 import { ChannelStartupService } from './../channel.service';
+
+const PHONENUMBER_MCC: Record<string, any> = (require('baileys') as any).PHONENUMBER_MCC ?? {};
 
 const groupMetadataCache = new CacheService(new CacheEngine(configService, 'groups').getEngine());
 
@@ -676,7 +677,12 @@ export class BaileysStartupService extends ChannelStartupService {
   }
 
   private async sendMobileCode() {
-    const { registration } = this.client.authState.creds || null;
+    const registration = (this.client.authState.creds as any)?.registration;
+
+    if (!registration) {
+      this.logger.error('Phone-number pairing is not supported by the installed Baileys version; use QR code pairing.');
+      return;
+    }
 
     let phoneNumber = registration.phoneNumber || this.phoneNumber;
 
@@ -710,7 +716,12 @@ export class BaileysStartupService extends ChannelStartupService {
     registration.method = 'sms';
 
     try {
-      const response = await this.client.requestRegistrationCode(registration);
+      const requestRegistrationCode = (this.client as any).requestRegistrationCode;
+      if (typeof requestRegistrationCode !== 'function') {
+        this.logger.error('Phone-number pairing is not supported by the installed Baileys version; use QR code pairing.');
+        return;
+      }
+      const response = await requestRegistrationCode.call(this.client, registration);
 
       if (['ok', 'sent'].includes(response?.status)) {
         this.logger.verbose('Registration code sent successfully');
@@ -1501,7 +1512,7 @@ export class BaileysStartupService extends ChannelStartupService {
         if (events['messaging-history.set']) {
           this.logger.verbose('Listening event: messaging-history.set');
           const payload = events['messaging-history.set'];
-          this.messageHandle['messaging-history.set'](payload, database);
+          this.messageHandle['messaging-history.set'](payload as any, database);
         }
 
         if (events['messages.upsert']) {
@@ -2235,7 +2246,7 @@ export class BaileysStartupService extends ChannelStartupService {
 
           const response = await axios.get(mediaMessage.media, config);
 
-          mimetype = response.headers['content-type'];
+          mimetype = String(response.headers['content-type'] ?? '');
         }
       }
 
@@ -2923,7 +2934,11 @@ export class BaileysStartupService extends ChannelStartupService {
       await this.client.updateLastSeenPrivacy(settings.privacySettings.last);
       this.logger.verbose('Last seen privacy updated');
 
-      await this.client.updateGroupsAddPrivacy(settings.privacySettings.groupadd);
+      if (settings.privacySettings.groupadd === 'none') {
+        this.logger.warn('Baileys does not support group-add privacy value "none"; keeping the current setting.');
+      } else {
+        await this.client.updateGroupsAddPrivacy(settings.privacySettings.groupadd as any);
+      }
       this.logger.verbose('Groups add privacy updated');
 
       this.reloadConnection();
