@@ -181,4 +181,4 @@ COPY --from=builder /evolution .
 
 EXPOSE 10000
 
-CMD [ "node", "./dist/src/main.js" ]
+CMD [ "sh", "./start-render.sh" ]
