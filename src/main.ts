@@ -55,6 +55,10 @@ async function bootstrap() {
     compression(),
   );
 
+  app.get('/health', (_req: Request, res: Response) => {
+    return res.status(200).json({ status: 'ok' });
+  });
+
   app.set('view engine', 'hbs');
   app.set('views', join(ROOT_DIR, 'views'));
   app.use(express.static(join(ROOT_DIR, 'public')));
