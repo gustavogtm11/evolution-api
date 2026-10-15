@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: evolution-api
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    autoDeploy: false
+    healthCheckPath: /health
+    disk:
+      name: evolution-data
+      mountPath: /evolution/data
+      sizeGB: 1
+    envVars:
+      - key: SERVER_PORT
+        value: "10000"
+      - key: SERVER_URL
+        sync: false
+      - key: AUTHENTICATION_API_KEY
+        sync: false
+      - key: AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES
+        value: "false"
+      - key: AUTH_STATE_STORAGE
+        value: file
+      - key: INSTANCE_DIR
+        value: /evolution/data/instances
+      - key: STORE_DIR
+        value: /evolution/data/store
+      - key: CORS_ORIGIN
+        value: "*"
+      - key: CORS_METHODS
+        value: "POST,GET,PUT,DELETE"
+      - key: CORS_CREDENTIALS
+        value: "false"
+      - key: DATABASE_ENABLED
+        value: "false"
+      - key: PROVIDER_ENABLED
+        value: "false"
+      - key: SQS_ENABLED
+        value: "false"
+      - key: CACHE_REDIS_ENABLED
+        value: "false"
+      - key: WEBHOOK_GLOBAL_ENABLED
+        value: "false"
