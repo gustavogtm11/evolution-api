@@ -1,4 +1,4 @@
-import { cert, getApp, getApps, initializeApp } from 'firebase-admin/app';
+import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { FieldValue, Firestore, getFirestore } from 'firebase-admin/firestore';
 import { AuthenticationCreds, AuthenticationState, BufferJSON, initAuthCreds, proto, SignalDataTypeMap } from 'baileys';
 
