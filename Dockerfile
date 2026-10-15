@@ -1,4 +1,4 @@
-FROM node:20.7.0-alpine AS builder
+FROM node:20.19.0-alpine AS builder
 
 LABEL version="1.8.0" description="Api to control whatsapp features through http requests." 
 LABEL maintainer="Davidson Gomes" git="https://github.com/DavidsonGomes"
@@ -15,9 +15,9 @@ RUN npm install --legacy-peer-deps
 
 COPY . .
 
-RUN npm run build || true
+RUN npm run build
 
-FROM node:20.7.0-alpine AS final
+FROM node:20.19.0-alpine AS final
 
 ENV TZ=America/Sao_Paulo
 ENV DOCKER_ENV=true
@@ -161,11 +161,11 @@ ENV CACHE_LOCAL_TTL=604800
 
 ENV AUTHENTICATION_TYPE=apikey
 
-ENV AUTHENTICATION_API_KEY=B6D711FCDE4D4FD5936544120E713976
+ENV AUTHENTICATION_API_KEY=
 ENV AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES=true
 
 ENV AUTHENTICATION_JWT_EXPIRIN_IN=0
-ENV AUTHENTICATION_JWT_SECRET='L=0YWt]b2w[WF>#>:&E`'
+ENV AUTHENTICATION_JWT_SECRET=
 
 ENV AUTHENTICATION_INSTANCE_MODE=server
 
@@ -179,4 +179,6 @@ WORKDIR /evolution
 
 COPY --from=builder /evolution .
 
-CMD [ "node", "./dist/src/main.js" ]
+EXPOSE 10000
+
+CMD [ "sh", "./start-render.sh" ]

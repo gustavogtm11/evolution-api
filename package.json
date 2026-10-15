@@ -88,7 +88,9 @@
     "swagger-ui-express": "^5.0.0",
     "uuid": "^9.0.0",
     "xml2js": "^0.6.2",
-    "yamljs": "^0.3.0"
+    "yamljs": "^0.3.0",
+    "long": "^5.2.3",
+    "firebase-admin": "^12.7.0"
   },
   "devDependencies": {
     "@types/compression": "^1.7.2",
