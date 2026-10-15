@@ -101,8 +101,9 @@ export async function useMultiFileAuthStateFirebase(
 
   const readData = async (key: string): Promise<any> => {
     const snapshot = await collection.doc(encodeKey(key)).get();
+    if (!snapshot.exists) return null;
     const serialized = snapshot.get('serialized') as string | undefined;
-    if (!snapshot.exists || typeof serialized !== 'string') return null;
+    if (typeof serialized !== 'string') return null;
     return JSON.parse(serialized, BufferJSON.reviver);
   };
 
