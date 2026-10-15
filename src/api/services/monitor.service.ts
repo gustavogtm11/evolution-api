@@ -31,6 +31,7 @@ import {
   WebsocketModel,
 } from '../models';
 import { ProviderFiles } from '../provider/sessions';
+import { deleteFirebaseAuthState, listFirebaseAuthInstances } from '../../utils/use-multi-file-auth-state-firebase';
 import { RepositoryBroker } from '../repository/repository.manager';
 import { Integration } from '../types/wa.types';
 import { CacheService } from './cache.service';
@@ -268,6 +269,11 @@ export class WAMonitoringService {
       return;
     }
 
+    if (process.env.AUTH_STATE_STORAGE?.toLowerCase() === 'firebase') {
+      this.logger.verbose('cleaning up Firebase auth state: ' + instanceName);
+      await deleteFirebaseAuthState(instanceName);
+    }
+
     this.logger.verbose('cleaning up instance in files: ' + instanceName);
     if (this.providerSession?.ENABLED) {
       await this.providerFiles.removeSession(instanceName);
@@ -278,6 +284,9 @@ export class WAMonitoringService {
   public async cleaningStoreFiles(instanceName: string) {
     if (!this.db.ENABLED) {
       this.logger.verbose('cleaning store files instance: ' + instanceName);
+      if (process.env.AUTH_STATE_STORAGE?.toLowerCase() === 'firebase') {
+        await deleteFirebaseAuthState(instanceName);
+      }
       if (this.providerSession?.ENABLED) {
         await this.providerFiles.removeSession(instanceName);
       }
@@ -323,7 +332,9 @@ export class WAMonitoringService {
     this.logger.verbose('Loading instances');
 
     try {
-      if (this.providerSession?.ENABLED) {
+      if (process.env.AUTH_STATE_STORAGE?.toLowerCase() === 'firebase') {
+        await this.loadInstancesFromFirebase();
+      } else if (this.providerSession?.ENABLED) {
         await this.loadInstancesFromProvider();
       } else if (this.redis.REDIS.ENABLED && this.redis.REDIS.SAVE_INSTANCES) {
         await this.loadInstancesFromRedis();
@@ -396,6 +407,16 @@ export class WAMonitoringService {
     this.logger.verbose('connectToWhatsapp: ' + name);
 
     this.waInstances[name] = instance;
+  }
+
+  private async loadInstancesFromFirebase() {
+    this.logger.verbose('Firebase Firestore enabled; restoring registered instances');
+    const instances = await listFirebaseAuthInstances();
+    if (instances.length === 0) {
+      this.logger.verbose('No Firebase-backed instances found');
+      return;
+    }
+    await Promise.all(instances.map((instanceName) => this.setInstance(instanceName)));
   }
 
   private async loadInstancesFromRedis() {
