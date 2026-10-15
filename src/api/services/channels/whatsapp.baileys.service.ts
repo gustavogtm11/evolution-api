@@ -734,8 +734,14 @@ export class BaileysStartupService extends ChannelStartupService {
   }
 
   public async receiveMobileCode(code: string) {
-    await this.client
-      .register(code.replace(/["']/g, '').trim().toLowerCase())
+    const register = (this.client as any).register;
+    if (typeof register !== 'function') {
+      this.logger.error('Phone-number pairing is not supported by the installed Baileys version; use QR code pairing.');
+      return;
+    }
+
+    await register
+      .call(this.client, code.replace(/["']/g, '').trim().toLowerCase())
       .then(async () => {
         this.logger.verbose('Registration code received successfully');
       })
