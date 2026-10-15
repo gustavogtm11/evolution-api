@@ -97,7 +97,6 @@ export async function useMultiFileAuthStateFirebase(
   const writeData = async (data: unknown, key: string): Promise<void> => {
     const serialized = JSON.stringify(data, BufferJSON.replacer);
     await collection.doc(encodeKey(key)).set({ key, serialized });
-    await instanceRef.set({ updatedAt: FieldValue.serverTimestamp() }, { merge: true });
   };
 
   const readData = async (key: string): Promise<any> => {
