@@ -21,6 +21,8 @@ services:
         value: "false"
       - key: AUTH_STATE_STORAGE
         value: file
+      - key: PERSISTENT_DATA_DIR
+        value: /evolution/data
       - key: INSTANCE_DIR
         value: /evolution/data/instances
       - key: STORE_DIR
