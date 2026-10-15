@@ -1,3 +1,4 @@
+import { mkdirSync } from 'fs';
 import { join, resolve } from 'path';
 
 export const ROOT_DIR = process.cwd();
@@ -11,3 +12,8 @@ export const INSTANCE_DIR = process.env.INSTANCE_DIR ? resolve(process.env.INSTA
 export const SRC_DIR = join(ROOT_DIR, 'src');
 export const STORE_DIR = process.env.STORE_DIR ? resolve(process.env.STORE_DIR) : join(ROOT_DIR, 'store');
 export const AUTH_DIR = join(STORE_DIR, 'auth');
+
+// Ensure mounted data directories exist before startup recovery scans them.
+mkdirSync(INSTANCE_DIR, { recursive: true });
+mkdirSync(STORE_DIR, { recursive: true });
+mkdirSync(AUTH_DIR, { recursive: true });
