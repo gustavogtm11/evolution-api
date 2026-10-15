@@ -179,4 +179,6 @@ WORKDIR /evolution
 
 COPY --from=builder /evolution .
 
+EXPOSE 10000
+
 CMD [ "node", "./dist/src/main.js" ]
