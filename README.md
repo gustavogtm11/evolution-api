@@ -57,7 +57,7 @@ Esta API pode ser hospedada como um serviço independente e consumida por outros
 ### Escolha do Blueprint
 
 - **Render pago:** use o arquivo `render-paid.yaml`. Ele monta um disco em `/evolution/data` e grava tanto as sessões quanto os arquivos de configuração em diretórios persistentes.
-- **Render gratuito para testes:** use `render-free-test.yaml`. Ele usa o Firestore para persistir o estado de autenticação do WhatsApp e tentar recuperar as instâncias após reinícios. **É experimental e não deve ser usado para clientes de produção:** configurações de webhooks e outros dados locais da Evolution API ainda não são todos persistidos no Firestore e podem se perder quando o serviço gratuito reiniciar ou suspender.
+- **Render gratuito para testes:** use `render-free-test.yaml`. Ele usa o Firestore para persistir o estado de autenticação do WhatsApp e tentar recuperar as instâncias após reinícios. **É experimental e não deve ser usado para clientes de produção:** o Render gratuito pode suspender o serviço por inatividade, interrompendo a conexão ativa com o WhatsApp. Configurações de webhooks e outros dados locais da Evolution API ainda não são todos persistidos no Firestore e podem se perder quando o serviço reiniciar ou suspender. O Firestore preserva o estado de autenticação, mas não garante atendimento contínuo nem recuperação de mensagens recebidas enquanto a API estiver dormindo.
 
 No Render, crie um Blueprint e selecione o repositório e a branch `fix/build-validation`. No campo de caminho do Blueprint, informe o arquivo desejado, por exemplo `render-paid.yaml` ou `render-free-test.yaml`.
 
