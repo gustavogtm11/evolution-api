@@ -1053,7 +1053,7 @@ export class ChatwootService {
         const response = await axios.get(media, {
           responseType: 'arraybuffer',
         });
-        mimeType = response.headers['content-type'];
+        mimeType = String(response.headers['content-type'] ?? '');
         this.logger.verbose('mime type: ' + mimeType);
       }
 
@@ -2018,7 +2018,7 @@ export class ChatwootService {
           this.logger.verbose('get base64 from media ads message');
           const imgBuffer = await axios.get(adsMessage.thumbnailUrl, { responseType: 'arraybuffer' });
 
-          const extension = mimeTypes.extension(imgBuffer.headers['content-type']);
+          const extension = mimeTypes.extension(String(imgBuffer.headers['content-type'] ?? ''));
           const mimeType = extension && mimeTypes.lookup(extension);
 
           if (!mimeType) {
