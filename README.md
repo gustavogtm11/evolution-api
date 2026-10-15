@@ -54,30 +54,43 @@ This code was produced based on the baileys library and it is still under develo
 
 Esta API pode ser hospedada como um serviço independente e consumida por outros sistemas através da API HTTP e dos webhooks.
 
-### Preparação
+### Escolha do Blueprint
 
-1. No Render, crie um **Blueprint** e conecte este repositório.
-2. Selecione a branch `fix/build-validation` para validar esta versão antes de integrá-la à `main`.
-3. O Render utilizará o arquivo `render.yaml` para criar o serviço Docker `evolution-api`.
-4. Depois que o Render gerar a URL pública do serviço, configure as variáveis abaixo no painel do serviço.
+- **Render pago:** use o arquivo `render-paid.yaml`. Ele monta um disco em `/evolution/data` e grava tanto as sessões quanto os arquivos de configuração em diretórios persistentes.
+- **Render gratuito para testes:** use `render-free-test.yaml`. Ele usa o Firestore para persistir o estado de autenticação do WhatsApp e tentar recuperar as instâncias após reinícios. **É experimental e não deve ser usado para clientes de produção:** configurações de webhooks e outros dados locais da Evolution API ainda não são todos persistidos no Firestore e podem se perder quando o serviço gratuito reiniciar ou suspender.
 
-### Variáveis obrigatórias no Render
+No Render, crie um Blueprint e selecione o repositório e a branch `fix/build-validation`. No campo de caminho do Blueprint, informe o arquivo desejado, por exemplo `render-paid.yaml` ou `render-free-test.yaml`.
+
+### Variáveis obrigatórias
 
 - `SERVER_URL`: URL pública HTTPS do serviço, por exemplo `https://SEU-SERVICO.onrender.com`.
 - `AUTHENTICATION_API_KEY`: crie uma chave longa, aleatória e exclusiva para produção. Guarde-a como segredo e não a coloque no código do seu outro projeto.
 
-A configuração do Blueprint define `SERVER_PORT=10000`, o endpoint de saúde `/health` e um disco persistente montado em `/evolution/instances` para os dados de sessão. Não remova o disco nem altere seu ponto de montagem sem revisar onde a aplicação salva as sessões.
+### Usar Firebase Firestore para autenticação do WhatsApp
+
+A opção é ativada por `AUTH_STATE_STORAGE=firebase`. Ela grava as credenciais e chaves de autenticação em documentos do Cloud Firestore, identifica as instâncias cadastradas e tenta recuperá-las na inicialização.
+
+1. No Firebase Console, abra ou crie um projeto e habilite o **Cloud Firestore**.
+2. Em Configurações do projeto > Contas de serviço, gere uma chave privada de conta de serviço. Trate esse JSON como um segredo administrativo.
+3. No Render, configure `FIREBASE_PROJECT_ID` com o ID do projeto e `FIREBASE_SERVICE_ACCOUNT_JSON` com o conteúdo completo do JSON da conta de serviço.
+4. Configure `AUTH_STATE_STORAGE=firebase`.
+5. Não coloque o JSON no GitHub, no frontend ou em variáveis expostas ao navegador. Restrinja o acesso ao painel do Render e à conta de serviço.
+
+O adaptador utiliza a coleção `evolution_auth_sessions`, com documentos separados por instância e subcoleção `keys`. O SDK Admin usa privilégios de servidor; configure as permissões do projeto e monitore os custos e limites do Firestore.
+
+**Limitação importante:** esse adaptador persiste o estado de autenticação do Baileys, não converte automaticamente todos os repositórios locais da Evolution API em armazenamento Firebase. No plano gratuito, webhooks, configurações, dados temporários e outros arquivos locais podem continuar efêmeros. Para operação comercial, prefira `render-paid.yaml` até que todo o estado necessário tenha persistência externa e os testes de reinicialização tenham passado.
 
 ### Verificação após o deploy
 
 1. Abra `https://SEU-SERVICO.onrender.com/health`. A resposta esperada é semelhante a `{"status":"ok"}`.
-2. Consulte a documentação da API no endereço público do serviço para criar uma instância e conectar o WhatsApp.
-3. Configure o webhook da instância para apontar para uma URL pública HTTPS do projeto que receberá os eventos. `localhost` só funciona entre processos na mesma máquina, não entre o Render e seu computador.
+2. Crie uma instância de teste e conecte o WhatsApp por QR Code.
+3. No modo Firebase, reinicie o serviço de teste e confirme nos logs que a instância foi recuperada sem exigir novo QR Code. Faça isso antes de conectar qualquer número de cliente.
+4. Configure o webhook da instância para apontar para uma URL pública HTTPS do projeto que receberá os eventos. `localhost` só funciona entre processos na mesma máquina, não entre o Render e seu computador.
 
 ### Segurança
 
-- Nunca use a chave de teste local em produção.
-- Armazene a chave no gerenciador de segredos do Render e nas variáveis de ambiente do projeto consumidor.
+- Nunca use chaves de teste local em produção.
+- Armazene a chave da API e as credenciais de Firebase no gerenciador de segredos do Render e nas variáveis de ambiente do projeto consumidor.
 - Não publique QR Codes, credenciais, tokens ou arquivos de sessão.
 - O endpoint `/health` serve apenas para verificar se o serviço responde; ele não comprova que uma sessão do WhatsApp está conectada.
 
